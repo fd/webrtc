@@ -2,7 +2,6 @@ package webrtc
 
 import (
 	"runtime"
-	"unsafe"
 )
 
 /*
@@ -19,8 +18,8 @@ func CleanupSSL() {
 }
 
 type (
-	Factory     struct{ ptr unsafe.Pointer }
-	MediaStream struct{ ptr unsafe.Pointer }
+	Factory     struct{ ptr C.Factory }
+	MediaStream struct{ ptr C.MediaStream }
 )
 
 func New() *Factory {
@@ -37,7 +36,7 @@ func (f *Factory) free() {
 }
 
 func (f *Factory) CreateMediaStream(label string) *MediaStream {
-	inner := C.WebRTC_PeerConnectionFactory_CreateMediaStreamWithLabel(f.ptr, C.CString(label))
+	inner := C.WebRTC_CreateMediaStreamWithLabel(f.ptr, C.CString(label))
 	outer := &MediaStream{inner}
 	runtime.SetFinalizer(outer, (*MediaStream).free)
 	return outer

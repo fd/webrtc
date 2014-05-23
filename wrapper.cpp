@@ -21,8 +21,7 @@ extern "C" {
 
 #include "_cgo_export.h"
 using talk_base::scoped_refptr;
-using webrtc::PeerConnectionFactoryInterface;
-using webrtc::MediaStreamInterface;
+using namespace webrtc;
 
 #define CreateRaw(T, ctor) \
   scoped_refptr<T> _ptr = (ctor); \
@@ -45,27 +44,62 @@ int WebRTC_CleanupSSL() {
 }
 
 
-void* WebRTC_PeerConnectionFactory_Create() {
+Factory WebRTC_PeerConnectionFactory_Create() {
   CreateRaw(PeerConnectionFactoryInterface, webrtc::CreatePeerConnectionFactory());
 }
 
-void WebRTC_PeerConnectionFactory_Free(void* ptr) {
+void WebRTC_PeerConnectionFactory_Free(Factory ptr) {
   if (ptr == NULL) return;
   CastPtr(PeerConnectionFactoryInterface, ptr)->Release();
 }
 
-// // RTCMediaStream
-void* WebRTC_PeerConnectionFactory_CreateMediaStreamWithLabel(void* ptr, char* clabel) {
+// RTCMediaStream
+MediaStream WebRTC_CreateMediaStreamWithLabel(Factory ptr, char* clabel) {
   PeerConnectionFactoryInterface* factory = CastPtr(PeerConnectionFactoryInterface, ptr);
   std::string label = clabel;
 
   CreateRaw(MediaStreamInterface, factory->CreateLocalMediaStream(label));
 }
 
-void WebRTC_MediaStream_Free(void* ptr) {
+void WebRTC_MediaStream_Free(MediaStream ptr) {
   if (ptr == NULL) return;
   CastPtr(MediaStreamInterface, ptr)->Release();
 }
 
+// PeerConnection
+PeerConnection WebRTC_PeerConnection_Create(
+  Factory factory, int nservers, ICEServer* servers,
+  MediaConstraints constraints, PeerConnectionObserver observerImpl)
+{
+  // collect servers
+  PeerConnectionInterface::IceServers iceServers;
+  for (int i = 0; i < nservers; i++) {
+    PeerConnectionInterface::IceServer iceServer;
+    iceServer.uri = [[self.URI absoluteString] UTF8String];
+    iceServer.username = [self.username UTF8String];
+    iceServer.password = [self.password UTF8String];
+    iceServers.push_back(iceServer);
+  }
+
+  // setup observer
+  RTCPeerConnectionObserver *observer = new RTCPeerConnectionObserver(observerImpl);
+
+  DTLSIdentityServiceInterface* dummy_dtls_identity_service = NULL;
+
+  CreateRaw(
+    PeerConnectionInterface,
+    factory->CreatePeerConnection(
+      iceServers,
+      CastPtr(RTCMediaConstraints, constraints),
+      dummy_dtls_identity_service,
+      observer
+    )
+  );
+}
+
+void WebRTC_PeerConnection_Free(PeerConnection ptr) {
+  if (ptr == NULL) return;
+  CastPtr(PeerConnectionInterface, ptr)->Release();
+}
 
 } // extern "C"
