@@ -12,6 +12,7 @@ extern const char* WebRTC_Version();
 extern int WebRTC_InitializeSSL();
 extern int WebRTC_CleanupSSL();
 
+typedef uint64_t Ref;
 typedef void* Factory;
 typedef void* MediaStream;
 typedef void* PeerConnection;
@@ -23,12 +24,15 @@ extern MediaStream WebRTC_CreateMediaStreamWithLabel(Factory ptr, char* clabel);
 extern void WebRTC_MediaStream_Free(MediaStream ptr);
 
 extern PeerConnection WebRTC_PeerConnection_Create(
-  Factory factory, int nservers, void* servers,
-  void** constraints, int nconstraints,
-  void* observerImpl);
+  Factory factory,
+  void* servers,     int nservers,
+  void* constraints, int nconstraints,
+  Ref observerRef);
 extern void WebRTC_PeerConnection_Free(PeerConnection ptr);
-
-extern void* Make_MediaConstraints(void** ptr, int len);
+extern void WebRTC_PeerConnection_CreateOffer(
+  PeerConnection ptr,
+  Ref observerRef,
+  void* constraints, int nconstraints);
 
 
 #ifdef __cplusplus

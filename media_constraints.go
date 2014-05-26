@@ -22,28 +22,28 @@ func (c *MediaConstraint) StringValue() string {
 	case string:
 		return v
 	default:
-		fmt.Sprintf("%s", v)
+		return fmt.Sprintf("%s", v)
 	}
 }
 
 //export c_MediaConstraint_Key
 func c_MediaConstraint_Key(ptr unsafe.Pointer) *C.char {
 	if ptr == nil {
-		return ""
+		return nil
 	}
-	return C.CString((*MediaConstraint)(ptr).Key)
+	return C.CString(string((*MediaConstraint)(ptr).Key))
 }
 
 //export c_MediaConstraint_Value
 func c_MediaConstraint_Value(ptr unsafe.Pointer) *C.char {
 	if ptr == nil {
-		return ""
+		return nil
 	}
 	return C.CString((*MediaConstraint)(ptr).StringValue())
 }
 
 //export c_MediaConstraint_Optional
-func c_MediaConstraint_Optional(ptr unsafe.Pointer) *C.int {
+func c_MediaConstraint_Optional(ptr unsafe.Pointer) C.int {
 	if ptr == nil {
 		return 1
 	}
