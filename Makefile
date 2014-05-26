@@ -44,3 +44,7 @@ build/${BUILD_OS}_${BUILD_ARCH}/include/%.h: vendor/libwebrtc/trunk/%.h
 build/${BUILD_OS}_${BUILD_ARCH}/lib/%.a: vendor/libwebrtc/trunk/out/Release/%.a
 	@mkdir -p $(dir $@)
 	cp $< $@
+
+
+run-example:
+	go run _examples/main.go
