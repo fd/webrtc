@@ -60,18 +60,6 @@ func (f *Factory) CreatePeerConnection(servers []*ICEServer, constraints []*Medi
 	return outer
 }
 
-func (c *PeerConnection) CreateOffer(observer FailureObserver, constraints []*MediaConstraint) {
-	var (
-		pconstraints unsafe.Pointer
-	)
-
-	if len(constraints) > 0 {
-		pconstraints = unsafe.Pointer(&constraints[0])
-	}
-
-	C.WebRTC_PeerConnection_CreateOffer(c.ptr, register(observer), pconstraints, C.int(len(constraints)))
-}
-
 func (s *PeerConnection) free() {
 	if s != nil {
 		C.WebRTC_PeerConnection_Free(s.ptr)

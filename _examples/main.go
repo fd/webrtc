@@ -28,15 +28,9 @@ func main() {
 	pc := factory.CreatePeerConnection(servers, constraints, &Observer{})
 
 	fmt.Println("==> create offer")
-	pc.CreateOffer(&OfferObserver{}, constraints)
+	pc.CreateOffer(constraints)
 
 	select {}
-}
-
-type OfferObserver struct{}
-
-func (o *OfferObserver) OnFailure(err string) {
-	fmt.Printf("EVENT: %s => %q\n", "OnFailure", err)
 }
 
 type Observer struct{}
