@@ -47,4 +47,4 @@ build/${BUILD_OS}_${BUILD_ARCH}/lib/%.a: vendor/libwebrtc/trunk/out/Release/%.a
 
 
 run-example:
-	go run _examples/main.go
+	go run _examples/simple/main.go

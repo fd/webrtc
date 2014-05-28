@@ -93,9 +93,9 @@ const (
 
 	// PeerConnection constraint keys.
 	// Temporary pseudo-constraints used to enable DTLS-SRTP
-	EnableDtlsSrtpConstraint = MediaConstraintKey("Enable DTLS-SRTP")
+	EnableDtlsSrtpConstraint = MediaConstraintKey("DtlsSrtpKeyAgreement")
 	// Temporary pseudo-constraints used to enable DataChannels
-	EnableRtpDataChannelsConstraint = MediaConstraintKey("Enable RTP DataChannels")
+	EnableRtpDataChannelsConstraint = MediaConstraintKey("RtpDataChannels")
 	// Google-specific constraint keys.
 	// Temporary pseudo-constraint for enabling DSCP through JS.
 	EnableDscpConstraint = MediaConstraintKey("googDscp")

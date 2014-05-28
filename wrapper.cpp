@@ -82,6 +82,27 @@ char* WebRTC_SessionDescription_String(SessionDescription ptr) {
   return strdup(sd.c_str());
 }
 
+int WebRTC_SessionDescription_AddCandidate(SessionDescription ptr, IceCandidate c)
+{
+  if (ptr == NULL || c == NULL) return 0;
+  SessionDescriptionInterface* _ptr = CastPtr(SessionDescriptionInterface, ptr);
+  IceCandidateInterface* _c = CastPtr(IceCandidateInterface, c);
+  return _ptr->AddCandidate(_c) ? 1 : 0;
+}
+
+char* WebRTC_SessionDescription_Type(SessionDescription ptr) {
+  if (ptr == NULL) return NULL;
+  std::string type = ((SessionDescriptionInterface*)ptr)->type();
+  return strdup(type.c_str());
+}
+
+SessionDescription WebRTC_SessionDescription_Parse(char* type, char* raw)
+{
+  std::string _type = type;
+  std::string sdp = raw;
+  return CreateSessionDescription(_type, sdp, NULL);
+}
+
 class RTCCreateSessionDescriptionObserver : public CreateSessionDescriptionObserver {
 public:
 
@@ -126,7 +147,7 @@ public:
   }
 
   void OnSuccess() {
-
+    c_SetSessionDescription_OnSuccess(_ref);
   }
 
   void OnFailure(const std::string& error) {
@@ -151,7 +172,6 @@ public:
   }
 
   void OnError() {
-    std::cout << "OnError\n";
     c_RTCPeerConnectionObserver_OnError(_ref);
   }
 
@@ -159,7 +179,6 @@ public:
   void OnSignalingChange(
      PeerConnectionInterface::SignalingState new_state)
   {
-    std::cout << "OnSignalingChange\n";
     c_RTCPeerConnectionObserver_OnSignalingChange(_ref, int(new_state));
   }
 
@@ -167,14 +186,12 @@ public:
   // TODO(bemasc): Remove once callers transition to OnSignalingChange.
   void OnStateChange(PeerConnectionObserver::StateType state_changed)
   {
-    std::cout << "OnStateChange\n";
     c_RTCPeerConnectionObserver_OnStateChange(_ref, int(state_changed));
   }
 
   // Triggered when media is received on a new stream from remote peer.
   void OnAddStream(MediaStreamInterface* stream)
   {
-    std::cout << "OnAddStream\n";
     c_RTCPeerConnectionObserver_OnAddStream(_ref);
   }
 
@@ -182,7 +199,6 @@ public:
   // Triggered when a remote peer close a stream.
   void OnRemoveStream(MediaStreamInterface* stream)
   {
-    std::cout << "OnRemoveStream\n";
     c_RTCPeerConnectionObserver_OnRemoveStream(_ref);
   }
 
@@ -191,14 +207,14 @@ public:
   // TODO(perkj): Make pure
   void OnDataChannel(DataChannelInterface* data_channel)
   {
-    std::cout << "OnDataChannel\n";
-    c_RTCPeerConnectionObserver_OnDataChannel(_ref);
+    // keep the channel
+    data_channel->AddRef();
+    c_RTCPeerConnectionObserver_OnDataChannel(_ref, data_channel);
   }
 
   // Triggered when renegotiation is needed, for example the ICE has restarted.
   void OnRenegotiationNeeded()
   {
-    std::cout << "OnRenegotiationNeeded\n";
     c_RTCPeerConnectionObserver_OnRenegotiationNeeded(_ref);
   }
 
@@ -206,7 +222,6 @@ public:
   void OnIceConnectionChange(
       PeerConnectionInterface::IceConnectionState new_state)
   {
-    std::cout << "OnIceConnectionChange\n";
     c_RTCPeerConnectionObserver_OnIceConnectionChange(_ref);
   }
 
@@ -214,27 +229,50 @@ public:
   void OnIceGatheringChange(
       PeerConnectionInterface::IceGatheringState new_state)
   {
-    std::cout << "OnIceGatheringChange\n";
     c_RTCPeerConnectionObserver_OnIceGatheringChange(_ref);
   }
 
   // New Ice candidate have been found.
   void OnIceCandidate(const IceCandidateInterface* candidate)
   {
-    std::cout << "OnIceCandidate\n";
-    c_RTCPeerConnectionObserver_OnIceCandidate(_ref);
+    c_RTCPeerConnectionObserver_OnIceCandidate(_ref, IceCandidate(candidate));
   }
 
   // TODO(bemasc): Remove this once callers transition to OnIceGatheringChange.
   // All Ice candidates have been found.
   void OnIceComplete()
   {
-    std::cout << "OnIceComplete\n";
     c_RTCPeerConnectionObserver_OnIceComplete(_ref);
   }
 
   ~RTCPeerConnectionObserver() {
     c_Ref_Unregister(_ref);
+  }
+
+private:
+  Ref _ref;
+};
+
+
+class RTCDataChannelObserver : public DataChannelObserver {
+
+public:
+  RTCDataChannelObserver(Ref ref) {
+    _ref = ref;
+  }
+
+  ~RTCDataChannelObserver() {
+    c_Ref_Unregister(_ref);
+  }
+
+  void OnStateChange()
+  {
+    c_DataChannel_OnStateChange(_ref);
+  }
+
+  void OnMessage(const DataBuffer& buffer)
+  {
+    c_DataChannel_OnMessage(_ref, (void*)buffer.data.data(), buffer.size());
   }
 
 private:
@@ -294,7 +332,6 @@ PeerConnection WebRTC_PeerConnection_Create(
     iceServer.uri = c_ICEServer_URL(rservers[i]);
     iceServer.username = c_ICEServer_Username(rservers[i]);
     iceServer.password = c_ICEServer_Password(rservers[i]);
-    std::cout << "server: " << iceServer.uri << "\n";
     iceServers.push_back(iceServer);
   }
 
@@ -314,6 +351,32 @@ PeerConnection WebRTC_PeerConnection_Create(
   );
 }
 
+int WebRTC_PeerConnection_UpdateICE(
+  PeerConnection ptr,
+  void* servers,     int nservers,
+  void* constraints, int nconstraints)
+{
+  if (ptr == NULL) return 0;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+
+  PeerConnectionInterface::IceServers iceServers;
+  void** rservers = (void**)servers;
+  void** rconstraints = (void**)constraints;
+
+  // collect servers
+  for (int i = 0; i < nservers; i++) {
+    PeerConnectionInterface::IceServer iceServer;
+    iceServer.uri = c_ICEServer_URL(rservers[i]);
+    iceServer.username = c_ICEServer_Username(rservers[i]);
+    iceServer.password = c_ICEServer_Password(rservers[i]);
+    iceServers.push_back(iceServer);
+  }
+
+  MediaConstraintsInterface* mconstraints = new MediaConstraints(rconstraints, nconstraints);
+
+  return pc->UpdateIce(iceServers, mconstraints);
+}
+
 void WebRTC_PeerConnection_Free(PeerConnection ptr) {
   if (ptr == NULL) return;
   CastPtr(PeerConnectionInterface, ptr)->Release();
@@ -331,6 +394,21 @@ void WebRTC_PeerConnection_CreateOffer(
   scoped_refptr<RTCCreateSessionDescriptionObserver> observer = RTCCreateSessionDescriptionObserver::Create(observerRef);
 
   pc->CreateOffer(observer,
+    new MediaConstraints(rconstraints, nconstraints));
+}
+
+void WebRTC_PeerConnection_CreateAnswer(
+  PeerConnection ptr,
+  Ref observerRef,
+  void* constraints, int nconstraints)
+{
+  if (ptr == NULL) return;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+  void** rconstraints = (void**)constraints;
+
+  scoped_refptr<RTCCreateSessionDescriptionObserver> observer = RTCCreateSessionDescriptionObserver::Create(observerRef);
+
+  pc->CreateAnswer(observer,
     new MediaConstraints(rconstraints, nconstraints));
 }
 
@@ -362,6 +440,153 @@ void WebRTC_PeerConnection_SetRemoteDescription(
 
   pc->SetRemoteDescription(observer,
     (SessionDescriptionInterface*)desc);
+}
+
+SessionDescription WebRTC_PeerConnection_GetLocalDescription(
+  PeerConnection ptr)
+{
+  if (ptr == NULL) return NULL;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+
+  return (SessionDescription)pc->local_description();
+}
+
+SessionDescription WebRTC_PeerConnection_GetRemoteDescription(
+  PeerConnection ptr)
+{
+  if (ptr == NULL) return NULL;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+
+  return (SessionDescription)pc->remote_description();
+}
+
+
+int WebRTC_PeerConnection_AddIceCandidate(
+  PeerConnection ptr,
+  IceCandidate c)
+{
+  if (ptr == NULL || c == NULL) return 0;
+  PeerConnectionInterface* _ptr = CastPtr(PeerConnectionInterface, ptr);
+  IceCandidateInterface* _c = CastPtr(IceCandidateInterface, c);
+  return _ptr->AddIceCandidate(_c) ? 1 : 0;
+}
+
+
+DataChannel WebRTC_DataChannel_Create(PeerConnection pc, char* label, Ref dc) {
+  if (pc == NULL || label == NULL) return NULL;
+  PeerConnectionInterface* _pc = CastPtr(PeerConnectionInterface, pc);
+
+  std::string _label = label;
+  if (label != NULL) free(label);
+
+  DataChannelInit* options = new DataChannelInit();
+  options->ordered = c_DataChannelOptions_Ordered(dc) == 1 ? true : false;
+  options->maxRetransmitTime = c_DataChannelOptions_MaxRetransmitTime(dc);
+  options->maxRetransmits = c_DataChannelOptions_MaxRetransmits(dc);
+  options->protocol = c_DataChannelOptions_Protocol(dc);
+  options->negotiated = c_DataChannelOptions_Negotiated(dc) == 1 ? true : false;
+  options->id = c_DataChannelOptions_Id(dc);
+
+  scoped_refptr<DataChannelInterface> _dc =
+    _pc->CreateDataChannel(_label, options);
+  if (_dc == NULL) {
+    return NULL;
+  }
+
+  RTCDataChannelObserver* observer = new RTCDataChannelObserver(dc);
+  _dc->RegisterObserver(observer);
+
+  CreateRaw(DataChannelInterface, _dc)
+}
+
+void WebRTC_DataChannel_Accept(DataChannel ptr, Ref ref)
+{
+  if (ptr == NULL) return;
+  DataChannelInterface* dc = CastPtr(DataChannelInterface, ptr);
+
+  RTCDataChannelObserver* observer = new RTCDataChannelObserver(ref);
+  dc->RegisterObserver(observer);
+}
+
+void WebRTC_DataChannel_Free(DataChannel ptr) {
+  if (ptr == NULL) return;
+  CastPtr(DataChannelInterface, ptr)->Release();
+}
+
+int WebRTC_DataChannel_State(
+  DataChannel ptr)
+{
+  if (ptr == NULL) return DataChannelInterface::kClosed;
+  DataChannelInterface* dc = CastPtr(DataChannelInterface, ptr);
+  return dc->state();
+}
+
+int WebRTC_DataChannel_Send(
+  DataChannel ptr,
+  void* bytes, int nbytes)
+{
+  if (ptr == NULL) return DataChannelInterface::kClosed;
+  DataChannelInterface* dc = CastPtr(DataChannelInterface, ptr);
+
+  talk_base::Buffer data(bytes, size_t(nbytes));
+  DataBuffer buffer(data, false);
+  return dc->Send(buffer);
+}
+
+void WebRTC_DataChannel_Close(
+  DataChannel ptr)
+{
+  if (ptr == NULL) return;
+  DataChannelInterface* dc = CastPtr(DataChannelInterface, ptr);
+  return dc->Close();
+}
+
+IceCandidate WebRTC_IceCandidate_Parse(char* id, int label, char* candidate)
+{
+  std::string _candidate = candidate;
+  std::string _id = id;
+  return CreateIceCandidate(_id, label, _candidate, NULL);
+}
+
+void WebRTC_IceCandidate_Free(IceCandidate ptr)
+{
+  if (ptr == NULL) return;
+  IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
+  delete c;
+}
+
+char* WebRTC_IceCandidate_SDP(IceCandidate ptr)
+{
+  std::string out = "";
+
+  if (ptr != NULL) {
+    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
+    c->ToString(&out);
+  }
+
+  return strdup(out.c_str());
+}
+
+char* WebRTC_IceCandidate_ID(IceCandidate ptr)
+{
+  std::string out = "";
+
+  if (ptr != NULL) {
+    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
+    out = c->sdp_mid();
+  }
+
+  return strdup(out.c_str());
+}
+
+int WebRTC_IceCandidate_Index(IceCandidate ptr)
+{
+  if (ptr != NULL) {
+    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
+    return c->sdp_mline_index();
+  }
+
+  return -1;
 }
 
 } // extern "C"

@@ -5,19 +5,41 @@ package webrtc
 */
 import "C"
 
+import (
+	"runtime"
+)
+
 type PeerConnectionObserver interface {
 	OnError()
-	OnSignalingChange()
-	OnStateChange()
+	OnSignalingChange(state SignalingState)
+	OnStateChange(state State)
 	OnAddStream()
 	OnRemoveStream()
-	OnDataChannel()
+	OnDataChannel(dataChannel *DataChannel)
 	OnRenegotiationNeeded()
 	OnIceConnectionChange()
 	OnIceGatheringChange()
-	OnIceCandidate()
+	OnIceCandidate(candidate *IceCandidate)
 	OnIceComplete()
 }
+
+type SignalingState uint8
+
+const (
+	SignalingStable SignalingState = iota
+	SignalingHaveLocalOffer
+	SignalingHaveLocalPrAnswer
+	SignalingHaveRemoteOffer
+	SignalingHaveRemotePrAnswer
+	SignalingClosed
+)
+
+type State uint8
+
+const (
+	StateSignaling State = iota
+	StateIce
+)
 
 //export c_RTCPeerConnectionObserver_OnError
 func c_RTCPeerConnectionObserver_OnError(ref C.Ref) {
@@ -31,7 +53,7 @@ func c_RTCPeerConnectionObserver_OnError(ref C.Ref) {
 func c_RTCPeerConnectionObserver_OnSignalingChange(ref C.Ref, s C.int) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnSignalingChange()
+		observer.OnSignalingChange(SignalingState(s))
 	}
 }
 
@@ -39,7 +61,7 @@ func c_RTCPeerConnectionObserver_OnSignalingChange(ref C.Ref, s C.int) {
 func c_RTCPeerConnectionObserver_OnStateChange(ref C.Ref, s C.int) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnStateChange()
+		observer.OnStateChange(State(s))
 	}
 }
 
@@ -60,10 +82,14 @@ func c_RTCPeerConnectionObserver_OnRemoveStream(ref C.Ref) {
 }
 
 //export c_RTCPeerConnectionObserver_OnDataChannel
-func c_RTCPeerConnectionObserver_OnDataChannel(ref C.Ref) {
+func c_RTCPeerConnectionObserver_OnDataChannel(ref C.Ref, ptr C.DataChannel) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnDataChannel()
+		outer := &DataChannel{ptr: ptr}
+		C.WebRTC_DataChannel_Accept(ptr, register(outer))
+		runtime.SetFinalizer(outer, (*DataChannel).free)
+
+		observer.OnDataChannel(outer)
 	}
 }
 
@@ -92,10 +118,10 @@ func c_RTCPeerConnectionObserver_OnIceGatheringChange(ref C.Ref) {
 }
 
 //export c_RTCPeerConnectionObserver_OnIceCandidate
-func c_RTCPeerConnectionObserver_OnIceCandidate(ref C.Ref) {
+func c_RTCPeerConnectionObserver_OnIceCandidate(ref C.Ref, candidate C.IceCandidate) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnIceCandidate()
+		observer.OnIceCandidate(&IceCandidate{candidate})
 	}
 }
 
