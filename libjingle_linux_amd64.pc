@@ -1,13 +1,20 @@
 Name: jingle
 Description: jingle
 Version: 1
-Cflags: -stdlib=libstdc++ \
-  -Ibuild/linux_amd64/include \
+Cflags: -Ibuild/linux_amd64/include \
   -Ibuild/linux_amd64/include/webrtc/system_wrappers/interface \
   -DPOSIX
 
-Libs: -stdlib=libstdc++ \
-  -Lbuild/linux_amd64/lib \
+# apt-get update
+# apt-get install build-essential git golang python subversion default-jre default-jdk pkg-config libgtk2.0-dev libnss3-dev libxss-dev libxtst-dev libdbus-1-dev libdrm-dev gconf-2.0 libgconf2-dev libgnome-keyring-dev libgcrypt-dev libpci-dev libudev-dev libasound2-dev libssl-dev libpulse-dev libglu1-mesa-dev
+# export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
+# export GOPATH="/go"
+# mkdir -p /go/src/github.com/fd
+# git clone git://github.com/fd/webrtc.git /go/src/github.com/fd/webrtc
+# cd /go/src/github.com/fd/webrtc
+# make vendor/libwebrtc/trunk/DEPS
+
+Libs: -Lbuild/linux_amd64/lib \
   -lCNG \
   -lG711 \
   -lG722 \
@@ -25,8 +32,6 @@ Libs: -stdlib=libstdc++ \
   -lcommand_line_parser \
   -lcommon_audio \
   -lcommon_audio_sse2 \
-  -lcrnspr \
-  -lcrnss \
   -lcrssl \
   -lexpat \
   -lfield_trial \
