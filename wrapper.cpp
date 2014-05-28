@@ -70,6 +70,17 @@ void WebRTC_MediaStream_Free(MediaStream ptr) {
   CastPtr(MediaStreamInterface, ptr)->Release();
 }
 
+void WebRTC_SessionDescription_Free(SessionDescription ptr) {
+  if (ptr == NULL) return;
+  delete (SessionDescriptionInterface*)ptr;
+}
+
+char* WebRTC_SessionDescription_String(SessionDescription ptr) {
+  if (ptr == NULL) return NULL;
+  std::string sd;
+  ((SessionDescriptionInterface*)ptr)->ToString(&sd);
+  return strdup(sd.c_str());
+}
 
 class RTCCreateSessionDescriptionObserver : public CreateSessionDescriptionObserver {
 public:
@@ -85,7 +96,7 @@ public:
   }
 
   void OnSuccess(SessionDescriptionInterface* desc) {
-
+    c_CreateSessionDescription_OnSuccess(_ref, desc);
   }
 
   void OnFailure(const std::string& error) {
@@ -321,6 +332,36 @@ void WebRTC_PeerConnection_CreateOffer(
 
   pc->CreateOffer(observer,
     new MediaConstraints(rconstraints, nconstraints));
+}
+
+void WebRTC_PeerConnection_SetLocalDescription(
+  PeerConnection ptr,
+  Ref observerRef,
+  SessionDescription desc)
+{
+  if (ptr == NULL || desc == NULL) return;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+
+  scoped_refptr<RTCSetSessionDescriptionObserver> observer =
+    RTCSetSessionDescriptionObserver::Create(observerRef);
+
+  pc->SetLocalDescription(observer,
+    (SessionDescriptionInterface*)desc);
+}
+
+void WebRTC_PeerConnection_SetRemoteDescription(
+  PeerConnection ptr,
+  Ref observerRef,
+  SessionDescription desc)
+{
+  if (ptr == NULL || desc == NULL) return;
+  PeerConnectionInterface* pc = CastPtr(PeerConnectionInterface, ptr);
+
+  scoped_refptr<RTCSetSessionDescriptionObserver> observer =
+    RTCSetSessionDescriptionObserver::Create(observerRef);
+
+  pc->SetRemoteDescription(observer,
+    (SessionDescriptionInterface*)desc);
 }
 
 } // extern "C"

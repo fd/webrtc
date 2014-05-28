@@ -16,6 +16,7 @@ typedef uint64_t Ref;
 typedef void* Factory;
 typedef void* MediaStream;
 typedef void* PeerConnection;
+typedef void* SessionDescription;
 
 extern Factory WebRTC_PeerConnectionFactory_Create();
 extern void WebRTC_PeerConnectionFactory_Free(Factory ptr);
@@ -33,6 +34,17 @@ extern void WebRTC_PeerConnection_CreateOffer(
   PeerConnection ptr,
   Ref observerRef,
   void* constraints, int nconstraints);
+extern void WebRTC_PeerConnection_SetLocalDescription(
+  PeerConnection ptr,
+  Ref observerRef,
+  SessionDescription desc);
+extern void WebRTC_PeerConnection_SetRemoteDescription(
+  PeerConnection ptr,
+  Ref observerRef,
+  SessionDescription desc);
+
+extern char* WebRTC_SessionDescription_String(SessionDescription ptr);
+extern void WebRTC_SessionDescription_Free(SessionDescription ptr);
 
 
 #ifdef __cplusplus

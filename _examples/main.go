@@ -28,7 +28,19 @@ func main() {
 	pc := factory.CreatePeerConnection(servers, constraints, &Observer{})
 
 	fmt.Println("==> create offer")
-	pc.CreateOffer(constraints)
+	desc, err := pc.CreateOffer(constraints)
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		return
+	}
+	fmt.Printf("desc: %s\n", desc)
+
+	fmt.Println("==> set local session description")
+	err = pc.SetLocalDescription(desc)
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		return
+	}
 
 	select {}
 }
