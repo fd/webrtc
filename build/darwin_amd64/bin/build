@@ -76,12 +76,8 @@ if [ ! -f $LIB_DIR/.done ]; then
   rm -rf $LIB_DIR
   mkdir -p $LIB_DIR
   cd $SRC_DIR/libwebrtc/trunk/out/Release
+
   libtool -static -o $LIB_DIR/libwebrtc-part0.a \
-    libCNG.a \
-    libG711.a \
-    libG722.a \
-    libNetEq4.a \
-    libPCM16B.a \
     libaudio_coding_module.a \
     libaudio_conference_mixer.a \
     libaudio_device.a \
@@ -89,76 +85,68 @@ if [ ! -f $LIB_DIR/.done ]; then
     libaudio_processing_sse2.a \
     libaudioproc_debug_proto.a \
     libbitrate_controller.a \
-    libbwe_tools_util.a \
-    libchannel_transport.a \
-    libcommand_line_parser.a \
+    libCNG.a \
     libcommon_audio.a \
     libcommon_audio_sse2.a \
+    libcommon_video.a \
     libcrnspr.a \
     libcrnss.a \
     libcrssl.a \
-    libexpat.a
-
-  libtool -static -o $LIB_DIR/libwebrtc-part1.a \
-    libfield_trial.a \
-    libfield_trial_default.a \
-    libframe_editing_lib.a \
-    libframe_generator.a \
-    libiLBC.a \
-    libiSAC.a \
-    libiSACFix.a \
+    libexpat.a \
+    libG711.a \
+    libG722.a \
     libicudata.a \
     libicui18n.a \
     libicuuc.a \
+    libiLBC.a \
+    libiSAC.a \
+
+  libtool -static -o $LIB_DIR/libwebrtc-part1.a \
     libjingle.a \
     libjingle_media.a \
-    libjingle_p2p.a \
-    libjingle_peerconnection.a \
-    libjingle_sound.a \
-    libjingle_xmpphelp.a \
-    libjpeg_turbo.a \
-    libjsoncpp.a \
-    libmedia_file.a \
-    libmetrics.a \
-    libnss_static.a \
-    libopenmax_dl.a \
-    libopus.a \
-    libpaced_sender.a \
-    libprotobuf_full_do_not_use.a \
-    libprotobuf_lite.a \
-    librbe_components.a
 
   libtool -static -o $LIB_DIR/libwebrtc-part2.a \
+    libjingle_p2p.a \
+
+  libtool -static -o $LIB_DIR/libwebrtc-part3.a \
+    libjingle_peerconnection.a \
+    libjpeg_turbo.a \
+    libmedia_file.a \
+    libNetEq4.a \
+    libnss_static.a \
+
+  libtool -static -o $LIB_DIR/libwebrtc-part4.a \
+    libopus.a \
+    libpaced_sender.a \
+    libPCM16B.a \
+    libprotobuf_lite.a \
+    librbe_components.a \
     libremote_bitrate_estimator.a \
-    librtcp_packet_parser.a \
     librtp_rtcp.a \
     libsqlite3.a \
     libsrtp.a \
     libsystem_wrappers.a \
     libusrsctplib.a \
-    libvoice_engine.a \
-    libvpx.a \
-    libvpx_asm_offsets_vp8.a \
-    libvpx_intrinsics_mmx.a \
-    libvpx_intrinsics_sse2.a \
-    libvpx_intrinsics_ssse3.a \
-    libwebrtc.a \
-    libwebrtc_base.a \
-    libwebrtc_common.a \
-    libwebrtc_i420.a \
-    libwebrtc_utility.a \
-    libyuv.a \
-    libwebrtc_opus.a \
-    libwebrtc_vp8.a \
-    libwebrtc_video_coding.a \
-    libcommon_video.a \
     libvideo_capture_module.a \
+
+  libtool -static -o $LIB_DIR/libwebrtc-part5.a \
     libvideo_coding_utility.a \
     libvideo_engine_core.a \
     libvideo_processing.a \
     libvideo_processing_sse2.a \
-    libvideo_quality_analysis.a \
-    libvideo_render_module.a
+    libvideo_render_module.a \
+    libvoice_engine.a \
+    libvpx.a \
+    libvpx_intrinsics_mmx.a \
+    libvpx_intrinsics_sse2.a \
+    libvpx_intrinsics_ssse3.a \
+    libwebrtc_i420.a \
+    libwebrtc_opus.a \
+    libwebrtc_utility.a \
+    libwebrtc_video_coding.a \
+    libwebrtc_vp8.a \
+    libyuv.a \
+
 
   touch $LIB_DIR/.done
 fi

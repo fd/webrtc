@@ -20,4 +20,9 @@ Libs: -stdlib=libstdc++ \
   -framework IOKit \
   -framework OpenGL \
   -Lbuild/darwin_amd64/lib \
-  -lwebrtc
+  -lwebrtc-part0 \
+  -lwebrtc-part1 \
+  -lwebrtc-part2 \
+  -lwebrtc-part3 \
+  -lwebrtc-part4 \
+  -lwebrtc-part5
