@@ -4,4 +4,8 @@ set -e
 
 apt-get update -yy
 
-apt-get install build-essential git golang python subversion default-jre default-jdk pkg-config libgtk2.0-dev libnss3-dev libxss-dev libxtst-dev libdbus-1-dev libdrm-dev gconf-2.0 libgconf2-dev libgnome-keyring-dev libgcrypt-dev libpci-dev libudev-dev libasound2-dev libssl-dev libpulse-dev libglu1-mesa-dev -yy
+apt-get install build-essential git golang python subversion default-jre \
+ default-jdk pkg-config libgtk2.0-dev libnss3-dev libxss-dev libxtst-dev \
+ libdbus-1-dev libdrm-dev gconf-2.0 libgconf2-dev libgnome-keyring-dev \
+ libgcrypt-dev libpci-dev libudev-dev libasound2-dev libssl-dev libpulse-dev \
+ libglu1-mesa-dev libtool -yy

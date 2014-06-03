@@ -1,0 +1,6 @@
+
+create libwebrtc-part0.a
+addlib obj/talk/libjingle_peerconnection.a
+save
+
+end
