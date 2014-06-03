@@ -1,0 +1,23 @@
+Name: libwebrtc
+Description: libwebrtc
+Version: 1
+
+Cflags: -stdlib=libstdc++ \
+  -Ibuild/darwin_amd64/include \
+  -Ibuild/darwin_amd64/include/webrtc/system_wrappers/interface \
+  -DPOSIX
+
+Libs: -stdlib=libstdc++ \
+  -lobjc \
+  -framework Cocoa \
+  -framework CoreServices \
+  -framework Security \
+  -framework CoreAudio \
+  -framework CoreVideo \
+  -framework ApplicationServices \
+  -framework AudioToolbox \
+  -framework QTKit \
+  -framework IOKit \
+  -framework OpenGL \
+  -Lbuild/darwin_amd64/lib \
+  -lwebrtc

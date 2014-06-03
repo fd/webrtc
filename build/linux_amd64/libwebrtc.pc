@@ -1,0 +1,187 @@
+Name: jingle
+Description: jingle
+Version: 1
+Cflags: -Ibuild/linux_amd64/include \
+  -Ibuild/linux_amd64/include/webrtc/system_wrappers/interface \
+  -DPOSIX
+
+
+# export GOPATH="/go"
+# mkdir -p /go/src/github.com/fd
+# git clone git://github.com/fd/webrtc.git /go/src/github.com/fd/webrtc
+# cd /go/src/github.com/fd/webrtc
+# make vendor/libwebrtc/trunk/DEPS
+
+Libs: -Lbuild/linux_amd64/lib \
+  -lCNG \
+  -lG711 \
+  -lG722 \
+  -lNetEq4 \
+  -lPCM16B \
+  -laudio_coding_module \
+  -laudio_conference_mixer \
+  -laudio_device \
+  -laudio_processing \
+  -laudio_processing_sse2 \
+  -laudioproc_debug_proto \
+  -lbitrate_controller \
+  -lbwe_tools_util \
+  -lchannel_transport \
+  -lcommand_line_parser \
+  -lcommon_audio \
+  -lcommon_audio_sse2 \
+  -lcrssl \
+  -lexpat \
+  -lfield_trial \
+  -lfield_trial_default \
+  -lframe_editing_lib \
+  -lframe_generator \
+  -liLBC \
+  -liSAC \
+  -liSACFix \
+  -licudata \
+  -licui18n \
+  -licuuc \
+  -ljingle \
+  -ljingle_media \
+  -ljingle_p2p \
+  -ljingle_peerconnection \
+  -ljingle_sound \
+  -ljingle_xmpphelp \
+  -ljpeg_turbo \
+  -ljsoncpp \
+  -lmedia_file \
+  -lmetrics \
+  -lnss_static \
+  -lopenmax_dl \
+  -lopus \
+  -lpaced_sender \
+  -lprotobuf_full_do_not_use \
+  -lprotobuf_lite \
+  -lrbe_components \
+  -lremote_bitrate_estimator \
+  -lrtcp_packet_parser \
+  -lrtp_rtcp \
+  -lsqlite3 \
+  -lsrtp \
+  -lsystem_wrappers \
+  -lusrsctplib \
+  -lvoice_engine \
+  -lvpx \
+  -lvpx_asm_offsets_vp8 \
+  -lvpx_intrinsics_mmx \
+  -lvpx_intrinsics_sse2 \
+  -lvpx_intrinsics_ssse3 \
+  -lwebrtc \
+  -lwebrtc_base \
+  -lwebrtc_common \
+  -lwebrtc_i420 \
+  -lwebrtc_utility \
+  -lyuv \
+  -lwebrtc_opus \
+  -lwebrtc_vp8 \
+  -lwebrtc_video_coding \
+  -lcommon_video \
+  -lvideo_capture_module \
+  -lvideo_coding_utility \
+  -lvideo_engine_core \
+  -lvideo_processing \
+  -lvideo_processing_sse2 \
+  -lvideo_quality_analysis \
+  -lvideo_render_module
+
+./obj/webrtc/modules/libCNG.a
+./obj/webrtc/modules/libG711.a
+./obj/webrtc/modules/libG722.a
+./obj/webrtc/modules/libNetEq4.a
+./obj/webrtc/modules/libPCM16B.a
+./obj/webrtc/modules/libaudio_coding_module.a
+./obj/webrtc/modules/libaudio_conference_mixer.a
+./obj/webrtc/modules/libaudio_device.a
+./obj/webrtc/modules/libaudio_processing.a
+./obj/webrtc/modules/libaudio_processing_sse2.a
+
+./libyuv.a
+./obj/net/third_party/nss/libcrssl.a
+./obj/talk/libgunit.a
+./obj/talk/libjingle.a
+./obj/talk/libjingle_media.a
+./obj/talk/libjingle_p2p.a
+./obj/talk/libjingle_peerconnection.a
+./obj/talk/libjingle_sound.a
+./obj/talk/libjingle_unittest_main.a
+./obj/talk/libjingle_xmpphelp.a
+./obj/testing/libgmock.a
+./obj/testing/libgtest.a
+./obj/third_party/gflags/libgflags.a
+./obj/third_party/icu/libicudata.a
+./obj/third_party/icu/libicuuc.a
+./obj/third_party/jsoncpp/libjsoncpp.a
+./obj/third_party/libjpeg_turbo/libjpeg_turbo.a
+./obj/third_party/libsrtp/libsrtp.a
+./obj/third_party/libvpx/libvpx.a
+./obj/third_party/libvpx/libvpx_asm_offsets_vp8.a
+./obj/third_party/libvpx/libvpx_intrinsics_mmx.a
+./obj/third_party/libvpx/libvpx_intrinsics_sse2.a
+./obj/third_party/libvpx/libvpx_intrinsics_ssse3.a
+./obj/third_party/openmax_dl/dl/libopenmax_dl.a
+./obj/third_party/opus/libopus.a
+./obj/third_party/protobuf/libprotobuf_full_do_not_use.a
+./obj/third_party/protobuf/libprotobuf_lite.a
+./obj/third_party/usrsctp/libusrsctplib.a
+./obj/third_party/yasm/libgenperf_libs.a
+./obj/webrtc/base/libwebrtc_base.a
+./obj/webrtc/base/libwebrtc_base_tests_utils.a
+./obj/webrtc/common_audio/libcommon_audio.a
+./obj/webrtc/common_audio/libcommon_audio_sse2.a
+./obj/webrtc/common_video/libcommon_video.a
+./obj/webrtc/libwebrtc.a
+./obj/webrtc/libwebrtc_common.a
+./obj/webrtc/modules/libNetEq4TestTools.a
+
+./obj/webrtc/modules/libaudioproc_debug_proto.a
+./obj/webrtc/modules/libaudioproc_unittest_proto.a
+
+./obj/webrtc/modules/libbitrate_controller.a
+./obj/webrtc/modules/libbwe_tools_util.a
+./obj/webrtc/modules/libdesktop_capture.a
+./obj/webrtc/modules/libdesktop_capture_differ_sse2.a
+./obj/webrtc/modules/libiLBC.a
+./obj/webrtc/modules/libiSAC.a
+./obj/webrtc/modules/libiSACFix.a
+./obj/webrtc/modules/libmedia_file.a
+./obj/webrtc/modules/libneteq_test_support.a
+./obj/webrtc/modules/libneteq_unittest_tools.a
+./obj/webrtc/modules/libpaced_sender.a
+./obj/webrtc/modules/libremote_bitrate_estimator.a
+./obj/webrtc/modules/librtp_rtcp.a
+./obj/webrtc/modules/libtest_framework.a
+./obj/webrtc/modules/libvideo_capture_module.a
+./obj/webrtc/modules/libvideo_codecs_test_framework.a
+./obj/webrtc/modules/libvideo_processing.a
+./obj/webrtc/modules/libvideo_processing_sse2.a
+./obj/webrtc/modules/libvideo_render_module.a
+./obj/webrtc/modules/libwebrtc_i420.a
+./obj/webrtc/modules/libwebrtc_opus.a
+./obj/webrtc/modules/libwebrtc_utility.a
+./obj/webrtc/modules/libwebrtc_video_coding.a
+./obj/webrtc/modules/remote_bitrate_estimator/librbe_components.a
+./obj/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a
+./obj/webrtc/modules/video_coding/utility/libvideo_coding_utility.a
+./obj/webrtc/system_wrappers/source/libfield_trial_default.a
+./obj/webrtc/system_wrappers/source/libsystem_wrappers.a
+./obj/webrtc/test/libchannel_transport.a
+./obj/webrtc/test/libfield_trial.a
+./obj/webrtc/test/libframe_generator.a
+./obj/webrtc/test/libmetrics.a
+./obj/webrtc/test/librtcp_packet_parser.a
+./obj/webrtc/test/libtest_main.a
+./obj/webrtc/test/libtest_support.a
+./obj/webrtc/test/libtest_support_main.a
+./obj/webrtc/test/libwebrtc_test_common.a
+./obj/webrtc/tools/libcommand_line_parser.a
+./obj/webrtc/tools/libframe_editing_lib.a
+./obj/webrtc/tools/libvideo_quality_analysis.a
+./obj/webrtc/video_engine/libvideo_engine_core.a
+./obj/webrtc/video_engine/libvietest.a
+./obj/webrtc/voice_engine/libvoice_engine.a
