@@ -1,16 +1,14 @@
-Name: jingle
-Description: jingle
+Name: libwebrtc
+Description: libwebrtc
 Version: 1
+
 Cflags: -Ibuild/linux_amd64/include \
   -Ibuild/linux_amd64/include/webrtc/system_wrappers/interface \
   -DPOSIX
 
-
-# export GOPATH="/go"
-# mkdir -p /go/src/github.com/fd
-# git clone git://github.com/fd/webrtc.git /go/src/github.com/fd/webrtc
-# cd /go/src/github.com/fd/webrtc
-# make vendor/libwebrtc/trunk/DEPS
+Requires: expat, libcrypto, nss, x11, xext
 
 Libs: -Lbuild/linux_amd64/lib \
-  -lwebrtc
+  -lXss \
+  -lwebrtc-part0 \
+  -ldl

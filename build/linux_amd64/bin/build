@@ -79,6 +79,7 @@ if [ ! -f $LIB_DIR/.done ]; then
   cd $SRC_DIR/libwebrtc/trunk/out/Release
   ar -M < $ROOT/bin/ar-merge-script
   cp libwebrtc-*.a $LIB_DIR
+  rm libwebrtc-*.a
 
   touch $LIB_DIR/.done
 fi
