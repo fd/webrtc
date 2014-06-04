@@ -12,5 +12,9 @@ Cflags: -Ibuild/linux_amd64/include \
 # cd /go/src/github.com/fd/webrtc
 # make vendor/libwebrtc/trunk/DEPS
 
+Requires: expat, libcrypto, nss, x11, xext
+
 Libs: -Lbuild/linux_amd64/lib \
-  -lwebrtc
+  -lXss \
+  -lwebrtc-part0 \
+  -ldl \

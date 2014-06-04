@@ -1,6 +1,58 @@
 
 create libwebrtc-part0.a
+addlib obj/third_party/libvpx/libvpx_intrinsics_ssse3.a
+addlib obj/third_party/libvpx/libvpx_intrinsics_mmx.a
+addlib obj/third_party/libvpx/libvpx_intrinsics_sse2.a
+addlib obj/third_party/libvpx/libvpx.a
+addlib obj/webrtc/common_audio/libcommon_audio_sse2.a
+addlib obj/webrtc/modules/libaudio_processing_sse2.a
+addlib obj/webrtc/modules/libvideo_processing_sse2.a
+addlib obj/third_party/opus/libopus.a
+addlib obj/webrtc/modules/libG722.a
+addlib obj/webrtc/modules/libiLBC.a
+addlib obj/webrtc/modules/libiSAC.a
+addlib obj/webrtc/modules/libwebrtc_opus.a
+addlib obj/webrtc/modules/libPCM16B.a
+addlib obj/webrtc/modules/libG711.a
+addlib obj/webrtc/modules/libCNG.a
+addlib obj/webrtc/modules/libaudio_coding_module.a
+addlib obj/third_party/protobuf/libprotobuf_lite.a
+addlib obj/webrtc/modules/libaudioproc_debug_proto.a
+addlib obj/webrtc/modules/libremote_bitrate_estimator.a
+addlib obj/webrtc/modules/libNetEq4.a
+addlib obj/webrtc/modules/video_coding/utility/libvideo_coding_utility.a
+addlib obj/webrtc/modules/libbitrate_controller.a
+addlib obj/webrtc/modules/remote_bitrate_estimator/librbe_components.a
+addlib obj/webrtc/modules/libmedia_file.a
+addlib libyuv.a
+addlib obj/third_party/usrsctp/libusrsctplib.a
+addlib obj/net/third_party/nss/libcrssl.a
+addlib obj/talk/libjingle.a
+addlib obj/talk/libjingle_media.a
+addlib obj/talk/libjingle_p2p.a
 addlib obj/talk/libjingle_peerconnection.a
+addlib obj/third_party/libjpeg_turbo/libjpeg_turbo.a
+addlib obj/third_party/libsrtp/libsrtp.a
+addlib obj/webrtc/base/libwebrtc_base.a
+addlib obj/webrtc/common_audio/libcommon_audio.a
+addlib obj/webrtc/common_video/libcommon_video.a
+addlib obj/webrtc/modules/libaudio_coding_module.a
+addlib obj/webrtc/modules/libaudio_conference_mixer.a
+addlib obj/webrtc/modules/libaudio_device.a
+addlib obj/webrtc/modules/libaudio_processing.a
+addlib obj/webrtc/modules/libpaced_sender.a
+addlib obj/webrtc/modules/librtp_rtcp.a
+addlib obj/webrtc/modules/libvideo_capture_module.a
+addlib obj/webrtc/modules/libvideo_processing.a
+addlib obj/webrtc/modules/libvideo_render_module.a
+addlib obj/webrtc/modules/libwebrtc_i420.a
+addlib obj/webrtc/modules/libwebrtc_utility.a
+addlib obj/webrtc/modules/libwebrtc_video_coding.a
+addlib obj/webrtc/modules/video_coding/codecs/vp8/libwebrtc_vp8.a
+addlib obj/webrtc/system_wrappers/source/libsystem_wrappers.a
+addlib obj/webrtc/video_engine/libvideo_engine_core.a
+addlib obj/webrtc/voice_engine/libvoice_engine.a
 save
 
 end
+
