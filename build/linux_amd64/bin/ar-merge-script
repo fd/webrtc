@@ -13,7 +13,6 @@ addlib obj/third_party/libvpx/libvpx_intrinsics_mmx.a
 addlib obj/third_party/libvpx/libvpx_intrinsics_sse2.a
 addlib obj/third_party/libvpx/libvpx_intrinsics_ssse3.a
 addlib obj/third_party/opus/libopus.a
-addlib obj/third_party/protobuf/libprotobuf_lite.a
 addlib obj/third_party/usrsctp/libusrsctplib.a
 addlib obj/webrtc/base/libwebrtc_base.a
 addlib obj/webrtc/common_audio/libcommon_audio.a
@@ -24,7 +23,6 @@ addlib obj/webrtc/modules/libaudio_conference_mixer.a
 addlib obj/webrtc/modules/libaudio_device.a
 addlib obj/webrtc/modules/libaudio_processing.a
 addlib obj/webrtc/modules/libaudio_processing_sse2.a
-addlib obj/webrtc/modules/libaudioproc_debug_proto.a
 addlib obj/webrtc/modules/libbitrate_controller.a
 addlib obj/webrtc/modules/libCNG.a
 addlib obj/webrtc/modules/libG711.a

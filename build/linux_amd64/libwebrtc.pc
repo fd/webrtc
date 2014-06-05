@@ -6,9 +6,8 @@ Cflags: -Ibuild/linux_amd64/include \
   -Ibuild/linux_amd64/include/webrtc/system_wrappers/interface \
   -DPOSIX
 
-Requires: expat, libcrypto, nss, x11, xext
+Requires: libcrypto, nss, expat
 
 Libs: -Lbuild/linux_amd64/lib \
-  -lXss \
   -lwebrtc-part0 \
   -ldl
