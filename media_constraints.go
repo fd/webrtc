@@ -26,24 +26,24 @@ func (c *MediaConstraint) StringValue() string {
 	}
 }
 
-//export c_MediaConstraint_Key
-func c_MediaConstraint_Key(ptr unsafe.Pointer) *C.char {
+//export go_MediaConstraint_Key
+func go_MediaConstraint_Key(ptr unsafe.Pointer) *C.char {
 	if ptr == nil {
 		return nil
 	}
 	return C.CString(string((*MediaConstraint)(ptr).Key))
 }
 
-//export c_MediaConstraint_Value
-func c_MediaConstraint_Value(ptr unsafe.Pointer) *C.char {
+//export go_MediaConstraint_Value
+func go_MediaConstraint_Value(ptr unsafe.Pointer) *C.char {
 	if ptr == nil {
 		return nil
 	}
 	return C.CString((*MediaConstraint)(ptr).StringValue())
 }
 
-//export c_MediaConstraint_Optional
-func c_MediaConstraint_Optional(ptr unsafe.Pointer) C.int {
+//export go_MediaConstraint_Optional
+func go_MediaConstraint_Optional(ptr unsafe.Pointer) C.int {
 	if ptr == nil {
 		return 1
 	}

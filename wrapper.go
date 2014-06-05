@@ -9,6 +9,7 @@ import (
 
 /*
 #include "wrapper.h"
+#include "ref.h"
 */
 import "C"
 

@@ -2,25 +2,26 @@ package webrtc
 
 /*
 #include "wrapper.h"
+#include "data_channel.h"
+#include "ref.h"
 */
 import "C"
 
 import (
 	"runtime"
+	"unsafe"
 )
 
 type PeerConnectionObserver interface {
 	OnError()
 	OnSignalingChange(state SignalingState)
-	OnStateChange(state State)
 	OnAddStream()
 	OnRemoveStream()
 	OnDataChannel(dataChannel *DataChannel)
 	OnRenegotiationNeeded()
-	OnIceConnectionChange()
-	OnIceGatheringChange()
+	OnIceConnectionChange(state IceConnectionState)
+	OnIceGatheringChange(state IceGatheringState)
 	OnIceCandidate(candidate *IceCandidate)
-	OnIceComplete()
 }
 
 type SignalingState uint8
@@ -34,12 +35,62 @@ const (
 	SignalingClosed
 )
 
-type State uint8
+var signalingStateStrings = map[SignalingState]string{
+	SignalingStable:             "stable",
+	SignalingHaveLocalOffer:     "have-local-offer",
+	SignalingHaveLocalPrAnswer:  "have-local-pranswer",
+	SignalingHaveRemoteOffer:    "have-remote-offer",
+	SignalingHaveRemotePrAnswer: "have-remote-pranswer",
+	SignalingClosed:             "closed",
+}
+
+func (s SignalingState) String() string {
+	return signalingStateStrings[s]
+}
+
+type IceGatheringState uint8
 
 const (
-	StateSignaling State = iota
-	StateIce
+	IceGatheringNew IceGatheringState = iota
+	IceGatheringGathering
+	IceGatheringComplete
 )
+
+var iceGatheringStateStrings = map[IceGatheringState]string{
+	IceGatheringNew:       "new",
+	IceGatheringGathering: "gathering",
+	IceGatheringComplete:  "complete",
+}
+
+func (s IceGatheringState) String() string {
+	return iceGatheringStateStrings[s]
+}
+
+type IceConnectionState uint8
+
+const (
+	IceConnectionNew IceConnectionState = iota
+	IceConnectionChecking
+	IceConnectionConnected
+	IceConnectionCompleted
+	IceConnectionFailed
+	IceConnectionDisconnected
+	IceConnectionClosed
+)
+
+var iceConnectionStateStrings = map[IceConnectionState]string{
+	IceConnectionNew:          "new",
+	IceConnectionChecking:     "checking",
+	IceConnectionConnected:    "connected",
+	IceConnectionCompleted:    "completed",
+	IceConnectionFailed:       "failed",
+	IceConnectionDisconnected: "disconnected",
+	IceConnectionClosed:       "closed",
+}
+
+func (s IceConnectionState) String() string {
+	return iceConnectionStateStrings[s]
+}
 
 //export c_RTCPeerConnectionObserver_OnError
 func c_RTCPeerConnectionObserver_OnError(ref C.Ref) {
@@ -54,14 +105,6 @@ func c_RTCPeerConnectionObserver_OnSignalingChange(ref C.Ref, s C.int) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
 		observer.OnSignalingChange(SignalingState(s))
-	}
-}
-
-//export c_RTCPeerConnectionObserver_OnStateChange
-func c_RTCPeerConnectionObserver_OnStateChange(ref C.Ref, s C.int) {
-	observer, ok := resolve(ref).(PeerConnectionObserver)
-	if ok && observer != nil {
-		observer.OnStateChange(State(s))
 	}
 }
 
@@ -82,11 +125,11 @@ func c_RTCPeerConnectionObserver_OnRemoveStream(ref C.Ref) {
 }
 
 //export c_RTCPeerConnectionObserver_OnDataChannel
-func c_RTCPeerConnectionObserver_OnDataChannel(ref C.Ref, ptr C.DataChannel) {
+func c_RTCPeerConnectionObserver_OnDataChannel(ref C.Ref, ptr unsafe.Pointer) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
 		outer := &DataChannel{ptr: ptr}
-		C.WebRTC_DataChannel_Accept(ptr, register(outer))
+		C.c_DataChannel_Accept(ptr, register(outer))
 		runtime.SetFinalizer(outer, (*DataChannel).free)
 
 		observer.OnDataChannel(outer)
@@ -102,18 +145,18 @@ func c_RTCPeerConnectionObserver_OnRenegotiationNeeded(ref C.Ref) {
 }
 
 //export c_RTCPeerConnectionObserver_OnIceConnectionChange
-func c_RTCPeerConnectionObserver_OnIceConnectionChange(ref C.Ref) {
+func c_RTCPeerConnectionObserver_OnIceConnectionChange(ref C.Ref, state C.int) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnIceConnectionChange()
+		observer.OnIceConnectionChange(IceConnectionState(state))
 	}
 }
 
 //export c_RTCPeerConnectionObserver_OnIceGatheringChange
-func c_RTCPeerConnectionObserver_OnIceGatheringChange(ref C.Ref) {
+func c_RTCPeerConnectionObserver_OnIceGatheringChange(ref C.Ref, state C.int) {
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
-		observer.OnIceGatheringChange()
+		observer.OnIceGatheringChange(IceGatheringState(state))
 	}
 }
 
@@ -122,13 +165,5 @@ func c_RTCPeerConnectionObserver_OnIceCandidate(ref C.Ref, candidate C.IceCandid
 	observer, ok := resolve(ref).(PeerConnectionObserver)
 	if ok && observer != nil {
 		observer.OnIceCandidate(&IceCandidate{candidate})
-	}
-}
-
-//export c_RTCPeerConnectionObserver_OnIceComplete
-func c_RTCPeerConnectionObserver_OnIceComplete(ref C.Ref) {
-	observer, ok := resolve(ref).(PeerConnectionObserver)
-	if ok && observer != nil {
-		observer.OnIceComplete()
 	}
 }

@@ -1,8 +1,6 @@
 package webrtc
 
-/*
-#include "wrapper.h"
-*/
+// #include "ref.h"
 import "C"
 
 import (
@@ -31,14 +29,14 @@ func unregister(id uint64) {
 	delete(refMap, id)
 }
 
-//export c_Ref_Unregister
-func c_Ref_Unregister(id C.Ref) {
-	unregister(uint64(id))
-}
-
 func resolve(id C.Ref) interface{} {
 	refMtx.RLock()
 	defer refMtx.RUnlock()
 
 	return refMap[uint64(id)]
+}
+
+//export go_Ref_Unregister
+func go_Ref_Unregister(id C.Ref) {
+	unregister(uint64(id))
 }
