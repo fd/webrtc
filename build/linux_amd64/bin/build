@@ -11,10 +11,20 @@ SRC_DIR=$ROOT/src
 
 . $ROOT/../common/config.sh
 
+GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+GYP_DEFINES="$GYP_DEFINES build_with_libjingle=1"
+GYP_DEFINES="$GYP_DEFINES build_with_chromium=0"
+GYP_DEFINES="$GYP_DEFINES enable_video=0"
+GYP_DEFINES="$GYP_DEFINES enable_protobuf=0"
+GYP_DEFINES="$GYP_DEFINES test_isolation_mode=noop"
+GYP_DEFINES="$GYP_DEFINES include_tests=0"
+GYP_DEFINES="$GYP_DEFINES use_openssl=0"
+GYP_DEFINES="$GYP_DEFINES use_x11=0"
+
 export BUILD_OS="$(go env GOOS)"
 export BUILD_ARCH="$(go env GOARCH)"
 export GYP_GENERATORS="ninja"
-export GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+export GYP_DEFINES
 export PATH="$SRC_DIR/depot_tools:$PATH"
 export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 
@@ -24,6 +34,10 @@ function force_copy_headers {
 
 function force_copy_library {
   rm -rf $LIB_DIR/.done
+}
+
+function force_build_libwebrtc {
+  rm -rf $SRC_DIR/.done-libwebrtc
 }
 
 set -e
@@ -43,13 +57,22 @@ if [ ! -f $SRC_DIR/.done-depot_tools ]; then
 fi
 
 # GET webrtc
-if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+if [ ! -f $SRC_DIR/.done-libwebrtc-src ]; then
   rm -rf $SRC_DIR/libwebrtc
   mkdir -p $SRC_DIR/libwebrtc
   cd $SRC_DIR/libwebrtc
   gclient config ${LIB_WEBRTC_REPO}
   gclient sync -f -n -D -j1 -r${LIBWEBRTC_REVISION}
   find . -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
+
+  force_build_libwebrtc
+
+  touch $SRC_DIR/.done-libwebrtc-src
+fi
+
+if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+  cd $SRC_DIR/libwebrtc
+  rm -rf $SRC_DIR/libwebrtc/trunk/out
   gclient runhooks -j1
   ninja -C trunk/out/Release
 

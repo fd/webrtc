@@ -11,10 +11,19 @@ SRC_DIR=$ROOT/src
 
 . $ROOT/../common/config.sh
 
+GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+GYP_DEFINES="$GYP_DEFINES build_with_libjingle=1"
+GYP_DEFINES="$GYP_DEFINES build_with_chromium=0"
+GYP_DEFINES="$GYP_DEFINES enable_video=0"
+GYP_DEFINES="$GYP_DEFINES enable_protobuf=0"
+GYP_DEFINES="$GYP_DEFINES test_isolation_mode=noop"
+GYP_DEFINES="$GYP_DEFINES include_tests=0"
+GYP_DEFINES="$GYP_DEFINES use_openssl=0"
+
 export BUILD_OS="$(go env GOOS)"
 export BUILD_ARCH="$(go env GOARCH)"
 export GYP_GENERATORS="ninja"
-export GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH build_with_libjingle=1 build_with_chromium=0 enable_video=0 enable_protobuf=0 include_tests=0"
+export GYP_DEFINES
 export PATH="$SRC_DIR/depot_tools:$PATH"
 
 function force_copy_headers {
@@ -26,7 +35,7 @@ function force_copy_library {
 }
 
 function force_build_libwebrtc {
-  rm -rf $LIB_DIR/.done
+  rm -rf $SRC_DIR/.done-libwebrtc
 }
 
 set -e
