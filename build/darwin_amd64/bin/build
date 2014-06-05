@@ -14,7 +14,7 @@ SRC_DIR=$ROOT/src
 export BUILD_OS="$(go env GOOS)"
 export BUILD_ARCH="$(go env GOARCH)"
 export GYP_GENERATORS="ninja"
-export GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+export GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH build_with_libjingle=1 build_with_chromium=0 enable_video=0 enable_protobuf=0 include_tests=0"
 export PATH="$SRC_DIR/depot_tools:$PATH"
 
 function force_copy_headers {
@@ -22,6 +22,10 @@ function force_copy_headers {
 }
 
 function force_copy_library {
+  rm -rf $LIB_DIR/.done
+}
+
+function force_build_libwebrtc {
   rm -rf $LIB_DIR/.done
 }
 
@@ -42,15 +46,24 @@ if [ ! -f $SRC_DIR/.done-depot_tools ]; then
 fi
 
 # GET webrtc
-if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+if [ ! -f $SRC_DIR/.done-libwebrtc-src ]; then
   rm -rf $SRC_DIR/libwebrtc
   mkdir -p $SRC_DIR/libwebrtc
   cd $SRC_DIR/libwebrtc
   gclient config ${LIB_WEBRTC_REPO}
   gclient sync -f -n -D -j1 -r${LIBWEBRTC_REVISION}
   find . -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
-  gclient runhooks -j1
-  ninja -C trunk/out/Release
+
+  force_build_libwebrtc
+
+  touch $SRC_DIR/.done-libwebrtc-src
+fi
+
+if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+  cd $SRC_DIR/libwebrtc
+  rm -rf $SRC_DIR/libwebrtc/trunk/out
+  gclient runhooks --force -j1
+  ninja -C $SRC_DIR/libwebrtc/trunk/out/Release
 
   force_copy_headers
   force_copy_library
@@ -83,7 +96,6 @@ if [ ! -f $LIB_DIR/.done ]; then
     libaudio_device.a \
     libaudio_processing.a \
     libaudio_processing_sse2.a \
-    libaudioproc_debug_proto.a \
     libbitrate_controller.a \
     libCNG.a \
     libcommon_audio.a \
@@ -100,6 +112,8 @@ if [ ! -f $LIB_DIR/.done ]; then
     libicuuc.a \
     libiLBC.a \
     libiSAC.a \
+
+  # libaudioproc_debug_proto.a \
 
   libtool -static -o $LIB_DIR/libwebrtc-part1.a \
     libjingle.a \
@@ -119,7 +133,6 @@ if [ ! -f $LIB_DIR/.done ]; then
     libopus.a \
     libpaced_sender.a \
     libPCM16B.a \
-    libprotobuf_lite.a \
     librbe_components.a \
     libremote_bitrate_estimator.a \
     librtp_rtcp.a \
@@ -128,6 +141,8 @@ if [ ! -f $LIB_DIR/.done ]; then
     libsystem_wrappers.a \
     libusrsctplib.a \
     libvideo_capture_module.a \
+
+  # libprotobuf_lite.a \
 
   libtool -static -o $LIB_DIR/libwebrtc-part5.a \
     libvideo_coding_utility.a \
