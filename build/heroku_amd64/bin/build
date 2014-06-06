@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+
+set -e
+
+DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+HOST_ARCH=x64
+TARGET_ARCH=x64
+
+ROOT="$(cd "$(dirname "$BASH_SOURCE")/.."; pwd)"
+INCLUDE_DIR=$ROOT/include
+LIB_DIR=$ROOT/lib
+SRC_DIR=$ROOT/src
+
+. $ROOT/../common/config.sh
+
+GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+GYP_DEFINES="$GYP_DEFINES build_with_libjingle=1"
+GYP_DEFINES="$GYP_DEFINES build_with_chromium=0"
+GYP_DEFINES="$GYP_DEFINES enable_video=0"
+GYP_DEFINES="$GYP_DEFINES enable_protobuf=0"
+GYP_DEFINES="$GYP_DEFINES test_isolation_mode=noop"
+GYP_DEFINES="$GYP_DEFINES include_tests=0"
+GYP_DEFINES="$GYP_DEFINES include_pulse_audio=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_audio_device=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_video_capture=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_video_render=0"
+GYP_DEFINES="$GYP_DEFINES use_x11=0"
+
+export BUILD_OS="heroku"
+export BUILD_ARCH="$(go env GOARCH)"
+export GYP_GENERATORS="ninja"
+export GYP_DEFINES
+export PATH="$SRC_DIR/depot_tools:$PATH"
+export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
+
+function force_copy_headers {
+  rm -rf $INCLUDE_DIR/.done
+}
+
+function force_copy_library {
+  rm -rf $LIB_DIR/.done
+}
+
+function force_build_libwebrtc {
+  rm -rf $SRC_DIR/.done-libwebrtc
+}
+
+function get_depot_tools {
+  if [ ! -f $SRC_DIR/.done-depot_tools ]; then
+    rm -rf $SRC_DIR/depot_tools
+    mkdir -p $SRC_DIR
+    cd $SRC_DIR
+    git clone ${DEPOT_TOOLS_REPO} depot_tools
+    find ./depot_tools -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
+
+    force_copy_headers
+    force_copy_library
+
+    touch $SRC_DIR/.done-depot_tools
+  fi
+}
+
+function get_webrtc {
+  if [ ! -f $SRC_DIR/.done-libwebrtc-src ]; then
+    get_depot_tools
+
+    rm -rf $SRC_DIR/libwebrtc
+    mkdir -p $SRC_DIR/libwebrtc
+    cd $SRC_DIR/libwebrtc
+    gclient config ${LIB_WEBRTC_REPO}
+    gclient sync -f -n -D -j1 -r${LIBWEBRTC_REVISION}
+    find . -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
+
+    force_build_libwebrtc
+
+    touch $SRC_DIR/.done-libwebrtc-src
+  fi
+}
+
+function build_webrtc {
+  if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+    get_webrtc
+
+    cd $SRC_DIR/libwebrtc
+    rm -rf $SRC_DIR/libwebrtc/trunk/out
+    gclient runhooks -j1
+    ninja -C trunk/out/Release
+
+    force_copy_headers
+    force_copy_library
+
+    touch $SRC_DIR/.done-libwebrtc
+  fi
+}
+
+function copy_headers {
+  if [ ! -f $INCLUDE_DIR/.done ]; then
+    build_webrtc
+
+    rm -rf $INCLUDE_DIR
+    cd $SRC_DIR/libwebrtc/trunk
+    for h in $(find . -type f -name '*.h')
+    do
+      mkdir -p "$INCLUDE_DIR/$(dirname $h)"
+      cp $h "$INCLUDE_DIR/$h"
+    done
+
+    touch $INCLUDE_DIR/.done
+  fi
+}
+
+function copy_libraries {
+  if [ ! -f $LIB_DIR/.done ]; then
+    build_webrtc
+
+    rm -rf $LIB_DIR
+    mkdir -p $LIB_DIR
+    cd $SRC_DIR/libwebrtc/trunk/out/Release
+    ar -M < $ROOT/bin/ar-merge-script
+    cp libwebrtc-*.a $LIB_DIR
+    rm libwebrtc-*.a
+
+    rm -f $ROOT/libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz
+
+    touch $LIB_DIR/.done
+  fi
+}
+
+function build_pkg {
+  if [ ! -f $ROOT/libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz ]; then
+    copy_headers
+    copy_libraries
+
+    cd $ROOT
+    rm -rf libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    mkdir libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    cp -r include      libwebrtc-${BUILD_OS}-${BUILD_ARCH}/include
+    cp -r lib          libwebrtc-${BUILD_OS}-${BUILD_ARCH}/lib
+    cp    libwebrtc.pc libwebrtc-${BUILD_OS}-${BUILD_ARCH}/libwebrtc.pc
+    tar -czf libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    rm -rf libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+  fi
+}
+
+build_pkg
