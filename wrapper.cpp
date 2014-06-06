@@ -134,7 +134,21 @@ public:
   // New Ice candidate have been found.
   void OnIceCandidate(const IceCandidateInterface* candidate)
   {
-    c_RTCPeerConnectionObserver_OnIceCandidate(_ref, IceCandidate(candidate));
+    std::string sdp_mid         = candidate->sdp_mid();
+    int         sdp_mline_index = candidate->sdp_mline_index();
+    std::string sdp;
+
+    if (!candidate->ToString(&sdp)) {
+      return;
+    }
+
+    void* _candidate = go_IceCandidate_ToGo(
+      (char*)sdp_mid.c_str(),
+      sdp_mline_index,
+      (char*)sdp.c_str()
+    );
+
+    c_RTCPeerConnectionObserver_OnIceCandidate(_ref, _candidate);
   }
 
   ~RTCPeerConnectionObserver() {
@@ -213,66 +227,6 @@ int WebRTC_PeerConnection_UpdateICE(
 void WebRTC_PeerConnection_Free(PeerConnection ptr) {
   if (ptr == NULL) return;
   CastPtr(PeerConnectionInterface, ptr)->Release();
-}
-
-int WebRTC_PeerConnection_AddIceCandidate(
-  PeerConnection ptr,
-  IceCandidate c)
-{
-  if (ptr == NULL || c == NULL) return 0;
-  PeerConnectionInterface* _ptr = CastPtr(PeerConnectionInterface, ptr);
-  IceCandidateInterface* _c = CastPtr(IceCandidateInterface, c);
-  return _ptr->AddIceCandidate(_c) ? 1 : 0;
-}
-
-
-
-IceCandidate WebRTC_IceCandidate_Parse(char* id, int label, char* candidate)
-{
-  std::string _candidate = candidate;
-  std::string _id = id;
-  return CreateIceCandidate(_id, label, _candidate, NULL);
-}
-
-void WebRTC_IceCandidate_Free(IceCandidate ptr)
-{
-  if (ptr == NULL) return;
-  IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
-  delete c;
-}
-
-char* WebRTC_IceCandidate_SDP(IceCandidate ptr)
-{
-  std::string out = "";
-
-  if (ptr != NULL) {
-    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
-    c->ToString(&out);
-  }
-
-  return strdup(out.c_str());
-}
-
-char* WebRTC_IceCandidate_ID(IceCandidate ptr)
-{
-  std::string out = "";
-
-  if (ptr != NULL) {
-    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
-    out = c->sdp_mid();
-  }
-
-  return strdup(out.c_str());
-}
-
-int WebRTC_IceCandidate_Index(IceCandidate ptr)
-{
-  if (ptr != NULL) {
-    IceCandidateInterface* c = CastPtr(IceCandidateInterface, ptr);
-    return c->sdp_mline_index();
-  }
-
-  return -1;
 }
 
 } // extern "C"

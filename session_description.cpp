@@ -5,11 +5,10 @@
 #include "talk/app/webrtc/jsep.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 
+#include "constants.h"
 #include "ref.h"
 #include "session_description.h"
 #include "media_constraints_prv.h"
-
-const char* errNillNotAllowed = "nil arguments are not allowed";
 
 extern "C" {
 #include "_cgo_export.h"

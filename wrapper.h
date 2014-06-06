@@ -34,17 +34,6 @@ extern int WebRTC_PeerConnection_UpdateICE(
   PeerConnection ptr,
   void* servers,     int nservers,
   void* constraints, int nconstraints);
-extern int WebRTC_PeerConnection_AddIceCandidate(
-  PeerConnection ptr,
-  IceCandidate c);
-
-extern IceCandidate WebRTC_IceCandidate_Parse(char* id, int label, char* candidate);
-extern void WebRTC_IceCandidate_Free(IceCandidate ptr);
-extern char* WebRTC_IceCandidate_SDP(IceCandidate ptr);
-extern char* WebRTC_IceCandidate_ID(IceCandidate ptr);
-extern int WebRTC_IceCandidate_Index(IceCandidate ptr);
-
-
 
 #ifdef __cplusplus
 } // extern "C"
