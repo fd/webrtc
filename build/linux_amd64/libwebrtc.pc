@@ -1,13 +1,13 @@
+prefix=${pcfiledir}
+
 Name: libwebrtc
 Description: libwebrtc
 Version: 1
 
-Cflags: -Ibuild/linux_amd64/include \
-  -Ibuild/linux_amd64/include/webrtc/system_wrappers/interface \
-  -DPOSIX
-
 Requires: libcrypto, nss, expat
 
-Libs: -Lbuild/linux_amd64/lib \
-  -lwebrtc-part0 \
-  -ldl
+Cflags: -I${prefix}/include \
+  -I${prefix}/include/webrtc/system_wrappers/interface \
+  -DPOSIX
+
+Libs: ${prefix}/lib/libwebrtc-part0.a -ldl
