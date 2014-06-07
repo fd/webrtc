@@ -2,10 +2,51 @@
 
 set -e
 
-apt-get update -yy
+BUILD_DIR=/tmp/build
+CACHE_DIR=/tmp/cache
 
-apt-get install build-essential git golang python subversion default-jre \
- default-jdk pkg-config libgtk2.0-dev libnss3-dev libxss-dev libxtst-dev \
- libdbus-1-dev libdrm-dev gconf-2.0 libgconf2-dev libgnome-keyring-dev \
- libgcrypt-dev libpci-dev libudev-dev libasound2-dev libssl-dev libpulse-dev \
- libglu1-mesa-dev -yy
+function error() {
+  echo " !     $*" >&2
+  exit 1
+}
+
+function topic() {
+  echo "-----> $*"
+}
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+APT_CACHE_DIR="$CACHE_DIR/apt/cache"
+APT_STATE_DIR="$CACHE_DIR/apt/state"
+
+mkdir -p "$APT_CACHE_DIR/archives/partial"
+mkdir -p "$APT_STATE_DIR/lists/partial"
+
+APT_OPTIONS="-o debug::nolocking=true -o dir::cache=$APT_CACHE_DIR -o dir::state=$APT_STATE_DIR"
+
+topic "Updating apt caches"
+apt-get $APT_OPTIONS update | indent
+
+deps=('build-essential' 'git-core' 'python' 'subversion' 'default-jre' \
+  'default-jdk' 'pkg-config' 'libgtk2.0-dev' 'libnss3-dev' 'libxss-dev' \
+  'libxtst-dev' 'libdbus-1-dev' 'libdrm-dev' 'gconf-2.0' 'libgconf2-dev' \
+  'libgnome-keyring-dev' 'libgcrypt-dev' 'libpci-dev' 'libudev-dev' \
+  'libasound2-dev' 'libssl-dev' 'libpulse-dev' 'libglu1-mesa-dev');
+
+for PACKAGE in "${deps[@]}"; do
+  topic "Fetching .debs for $PACKAGE"
+  apt-get $APT_OPTIONS -y -d install $PACKAGE | indent
+done
+
+mkdir -p $BUILD_DIR/.apt
+
+for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
+  topic "Installing $(basename $DEB)"
+  dpkg -x $DEB $BUILD_DIR/.apt/
+done
