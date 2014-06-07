@@ -36,7 +36,7 @@ GYP_DEFINES="$GYP_DEFINES include_internal_video_render=0"
 GYP_DEFINES="$GYP_DEFINES use_x11=0"
 
 export BUILD_OS="heroku"
-export BUILD_ARCH="$(go env GOARCH)"
+export BUILD_ARCH="amd64"
 export GYP_GENERATORS="ninja"
 export GYP_DEFINES
 export PATH="$SRC_DIR/depot_tools:$PATH"
