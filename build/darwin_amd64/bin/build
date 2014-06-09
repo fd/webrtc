@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 HOST_ARCH=x64
 TARGET_ARCH=x64
@@ -11,10 +13,23 @@ SRC_DIR=$ROOT/src
 
 . $ROOT/../common/config.sh
 
+GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+GYP_DEFINES="$GYP_DEFINES build_with_libjingle=1"
+GYP_DEFINES="$GYP_DEFINES build_with_chromium=0"
+GYP_DEFINES="$GYP_DEFINES enable_video=0"
+GYP_DEFINES="$GYP_DEFINES enable_protobuf=0"
+GYP_DEFINES="$GYP_DEFINES test_isolation_mode=noop"
+GYP_DEFINES="$GYP_DEFINES include_tests=0"
+GYP_DEFINES="$GYP_DEFINES use_openssl=0"
+GYP_DEFINES="$GYP_DEFINES include_pulse_audio=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_audio_device=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_video_capture=0"
+GYP_DEFINES="$GYP_DEFINES include_internal_video_render=0"
+
 export BUILD_OS="$(go env GOOS)"
 export BUILD_ARCH="$(go env GOARCH)"
 export GYP_GENERATORS="ninja"
-export GYP_DEFINES="host_arch=$HOST_ARCH target_arch=$TARGET_ARCH"
+export GYP_DEFINES
 export PATH="$SRC_DIR/depot_tools:$PATH"
 
 function force_copy_headers {
@@ -25,128 +40,170 @@ function force_copy_library {
   rm -rf $LIB_DIR/.done
 }
 
-set -e
+function force_build_libwebrtc {
+  rm -rf $SRC_DIR/.done-libwebrtc
+}
 
-# GET depot_tools
-if [ ! -f $SRC_DIR/.done-depot_tools ]; then
-  rm -rf $SRC_DIR/depot_tools
-  mkdir -p $SRC_DIR
-  cd $SRC_DIR
-  git clone ${DEPOT_TOOLS_REPO} depot_tools
-  find ./depot_tools -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
+function get_depot_tools {
+  if [ ! -f $SRC_DIR/.done-depot_tools ]; then
+    rm -rf $SRC_DIR/depot_tools
+    mkdir -p $SRC_DIR
+    cd $SRC_DIR
+    git clone ${DEPOT_TOOLS_REPO} depot_tools
+    find ./depot_tools -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
 
-  force_copy_headers
-  force_copy_library
+    force_copy_headers
+    force_copy_library
 
-  touch $SRC_DIR/.done-depot_tools
-fi
+    touch $SRC_DIR/.done-depot_tools
+  fi
+}
 
-# GET webrtc
-if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
-  rm -rf $SRC_DIR/libwebrtc
-  mkdir -p $SRC_DIR/libwebrtc
-  cd $SRC_DIR/libwebrtc
-  gclient config ${LIB_WEBRTC_REPO}
-  gclient sync -f -n -D -j1 -r${LIBWEBRTC_REVISION}
-  find . -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
-  gclient runhooks -j1
-  ninja -C trunk/out/Release
+function get_webrtc {
+  if [ ! -f $SRC_DIR/.done-libwebrtc-src ]; then
+    get_depot_tools
 
-  force_copy_headers
-  force_copy_library
+    rm -rf $SRC_DIR/libwebrtc
+    mkdir -p $SRC_DIR/libwebrtc
+    cd $SRC_DIR/libwebrtc
+    gclient config ${LIB_WEBRTC_REPO}
+    gclient sync -f -n -D -j1 -r${LIBWEBRTC_REVISION}
+    find . -type d -name .git -exec bash -c 'echo "* -text" > {}/info/attributes' \;
 
-  touch $SRC_DIR/.done-libwebrtc
-fi
+    force_build_libwebrtc
 
-# Copy Headers
-if [ ! -f $INCLUDE_DIR/.done ]; then
-  rm -rf $INCLUDE_DIR
-  cd $SRC_DIR/libwebrtc/trunk
-  for h in $(find . -type f -name '*.h')
-  do
-    mkdir -p "$INCLUDE_DIR/$(dirname $h)"
-    cp $h "$INCLUDE_DIR/$h"
-  done
+    touch $SRC_DIR/.done-libwebrtc-src
+  fi
+}
 
-  touch $INCLUDE_DIR/.done
-fi
+function build_webrtc {
+  if [ ! -f $SRC_DIR/.done-libwebrtc ]; then
+    get_webrtc
 
-# Merge archives
-if [ ! -f $LIB_DIR/.done ]; then
-  rm -rf $LIB_DIR
-  mkdir -p $LIB_DIR
-  cd $SRC_DIR/libwebrtc/trunk/out/Release
+    cd $SRC_DIR/libwebrtc
+    rm -rf $SRC_DIR/libwebrtc/trunk/out
+    gclient runhooks --force -j1
+    ninja -C $SRC_DIR/libwebrtc/trunk/out/Release
 
-  libtool -static -o $LIB_DIR/libwebrtc-part0.a \
-    libaudio_coding_module.a \
-    libaudio_conference_mixer.a \
-    libaudio_device.a \
-    libaudio_processing.a \
-    libaudio_processing_sse2.a \
-    libaudioproc_debug_proto.a \
-    libbitrate_controller.a \
-    libCNG.a \
-    libcommon_audio.a \
-    libcommon_audio_sse2.a \
-    libcommon_video.a \
-    libcrnspr.a \
-    libcrnss.a \
-    libcrssl.a \
-    libexpat.a \
-    libG711.a \
-    libG722.a \
-    libicudata.a \
-    libicui18n.a \
-    libicuuc.a \
-    libiLBC.a \
-    libiSAC.a \
+    force_copy_headers
+    force_copy_library
 
-  libtool -static -o $LIB_DIR/libwebrtc-part1.a \
-    libjingle.a \
-    libjingle_media.a \
+    touch $SRC_DIR/.done-libwebrtc
+  fi
+}
 
-  libtool -static -o $LIB_DIR/libwebrtc-part2.a \
-    libjingle_p2p.a \
+function copy_headers {
+  if [ ! -f $INCLUDE_DIR/.done ]; then
+    build_webrtc
 
-  libtool -static -o $LIB_DIR/libwebrtc-part3.a \
-    libjingle_peerconnection.a \
-    libjpeg_turbo.a \
-    libmedia_file.a \
-    libNetEq4.a \
-    libnss_static.a \
+    rm -rf $INCLUDE_DIR
+    cd $SRC_DIR/libwebrtc/trunk
+    for h in $(find . -type f -name '*.h')
+    do
+      mkdir -p "$INCLUDE_DIR/$(dirname $h)"
+      cp $h "$INCLUDE_DIR/$h"
+    done
 
-  libtool -static -o $LIB_DIR/libwebrtc-part4.a \
-    libopus.a \
-    libpaced_sender.a \
-    libPCM16B.a \
-    libprotobuf_lite.a \
-    librbe_components.a \
-    libremote_bitrate_estimator.a \
-    librtp_rtcp.a \
-    libsqlite3.a \
-    libsrtp.a \
-    libsystem_wrappers.a \
-    libusrsctplib.a \
-    libvideo_capture_module.a \
+    touch $INCLUDE_DIR/.done
+  fi
+}
 
-  libtool -static -o $LIB_DIR/libwebrtc-part5.a \
-    libvideo_coding_utility.a \
-    libvideo_engine_core.a \
-    libvideo_processing.a \
-    libvideo_processing_sse2.a \
-    libvideo_render_module.a \
-    libvoice_engine.a \
-    libvpx.a \
-    libvpx_intrinsics_mmx.a \
-    libvpx_intrinsics_sse2.a \
-    libvpx_intrinsics_ssse3.a \
-    libwebrtc_i420.a \
-    libwebrtc_opus.a \
-    libwebrtc_utility.a \
-    libwebrtc_video_coding.a \
-    libwebrtc_vp8.a \
-    libyuv.a \
+function copy_libraries {
+  if [ ! -f $LIB_DIR/.done ]; then
+    build_webrtc
 
+    rm -rf $LIB_DIR
+    mkdir -p $LIB_DIR
+    cd $SRC_DIR/libwebrtc/trunk/out/Release
 
-  touch $LIB_DIR/.done
-fi
+    libtool -static -o $LIB_DIR/libwebrtc-part0.a \
+      libaudio_coding_module.a \
+      libaudio_conference_mixer.a \
+      libaudio_device.a \
+      libaudio_processing.a \
+      libaudio_processing_sse2.a \
+      libbitrate_controller.a \
+      libCNG.a \
+      libcommon_audio.a \
+      libcommon_audio_sse2.a \
+      libcommon_video.a \
+      libcrnspr.a \
+      libcrnss.a \
+      libcrssl.a \
+      libexpat.a \
+      libG711.a \
+      libG722.a \
+      libicudata.a \
+      libicui18n.a \
+      libicuuc.a \
+      libiLBC.a \
+      libiSAC.a \
+
+    libtool -static -o $LIB_DIR/libwebrtc-part1.a \
+      libjingle.a \
+      libjingle_media.a \
+
+    libtool -static -o $LIB_DIR/libwebrtc-part2.a \
+      libjingle_p2p.a \
+
+    libtool -static -o $LIB_DIR/libwebrtc-part3.a \
+      libjingle_peerconnection.a \
+      libjpeg_turbo.a \
+      libmedia_file.a \
+      libNetEq4.a \
+      libnss_static.a \
+
+    libtool -static -o $LIB_DIR/libwebrtc-part4.a \
+      libopus.a \
+      libpaced_sender.a \
+      libPCM16B.a \
+      librbe_components.a \
+      libremote_bitrate_estimator.a \
+      librtp_rtcp.a \
+      libsqlite3.a \
+      libsrtp.a \
+      libsystem_wrappers.a \
+      libusrsctplib.a \
+      libvideo_capture_module.a \
+
+    libtool -static -o $LIB_DIR/libwebrtc-part5.a \
+      libvideo_coding_utility.a \
+      libvideo_engine_core.a \
+      libvideo_processing.a \
+      libvideo_processing_sse2.a \
+      libvideo_render_module.a \
+      libvoice_engine.a \
+      libvpx.a \
+      libvpx_intrinsics_mmx.a \
+      libvpx_intrinsics_sse2.a \
+      libvpx_intrinsics_ssse3.a \
+      libwebrtc_i420.a \
+      libwebrtc_opus.a \
+      libwebrtc_utility.a \
+      libwebrtc_video_coding.a \
+      libwebrtc_vp8.a \
+      libyuv.a \
+
+    rm -f $ROOT/libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz
+
+    touch $LIB_DIR/.done
+  fi
+}
+
+function build_pkg {
+  if [ ! -f $ROOT/libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz ]; then
+    copy_headers
+    copy_libraries
+
+    cd $ROOT
+    rm -rf libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    mkdir libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    cp -r include      libwebrtc-${BUILD_OS}-${BUILD_ARCH}/include
+    cp -r lib          libwebrtc-${BUILD_OS}-${BUILD_ARCH}/lib
+    cp    libwebrtc.pc libwebrtc-${BUILD_OS}-${BUILD_ARCH}/libwebrtc.pc
+    tar -czf libwebrtc-${BUILD_OS}-${BUILD_ARCH}.tar.gz libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+    rm -rf libwebrtc-${BUILD_OS}-${BUILD_ARCH}
+  fi
+}
+
+build_pkg

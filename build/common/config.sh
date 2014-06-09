@@ -1,2 +1,2 @@
 LIB_WEBRTC_REPO="http://webrtc.googlecode.com/svn/trunk"
-LIBWEBRTC_REVISION=r6226
+LIBWEBRTC_REVISION=r6344

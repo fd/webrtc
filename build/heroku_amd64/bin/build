@@ -2,6 +2,15 @@
 
 set -e
 
+BUILD_DIR=/tmp/build
+CACHE_DIR=/tmp/cache
+
+export PATH="$BUILD_DIR/.apt/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$BUILD_DIR/.apt/usr/lib:$LD_LIBRARY_PATH"
+export INCLUDE_PATH="$BUILD_DIR/.apt/usr/include:$INCLUDE_PATH"
+export CPATH="$INCLUDE_PATH"
+export CPPPATH="$INCLUDE_PATH"
+
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 HOST_ARCH=x64
 TARGET_ARCH=x64
@@ -26,8 +35,8 @@ GYP_DEFINES="$GYP_DEFINES include_internal_video_capture=0"
 GYP_DEFINES="$GYP_DEFINES include_internal_video_render=0"
 GYP_DEFINES="$GYP_DEFINES use_x11=0"
 
-export BUILD_OS="$(go env GOOS)"
-export BUILD_ARCH="$(go env GOARCH)"
+export BUILD_OS="heroku"
+export BUILD_ARCH="amd64"
 export GYP_GENERATORS="ninja"
 export GYP_DEFINES
 export PATH="$SRC_DIR/depot_tools:$PATH"

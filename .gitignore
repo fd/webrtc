@@ -1,1 +1,4 @@
+/build/*/*.tar.gz
+/build/*/include
+/build/*/lib
 /build/*/src

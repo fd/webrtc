@@ -84,9 +84,9 @@ func (o *Observer) offer(factory *webrtc.Factory) {
 		return
 	}
 
-	log.Printf("[%s] ==> send sdp offer (%s)", o.Name, localDesc.Type())
+	log.Printf("[%s] ==> send sdp offer (%s)", o.Name, localDesc.Type)
 	{
-		data, err := json.Marshal(map[string]string{"sdp": localDesc.String()})
+		data, err := json.Marshal(localDesc)
 		if err != nil {
 			log.Fatalf("[%s] error: %s", o.Name, err)
 		}
@@ -96,16 +96,18 @@ func (o *Observer) offer(factory *webrtc.Factory) {
 	log.Printf("[%s] ==> receive sdp answer", o.Name)
 	{
 		var (
-			obj  map[string]string
+			obj  map[string]interface{}
 			data = <-o.sig_rcv
 		)
 		err := json.Unmarshal(data, &obj)
 		if err != nil {
 			log.Fatalf("[%s] error: %s", o.Name, err)
 		}
-		remoteDesc, err = webrtc.ParseSessionDescription("answer", obj["sdp"])
-		if err != nil {
-			log.Fatalf("[%s] error: %s", o.Name, err)
+		if obj["sdp"] != nil {
+			err := json.Unmarshal(data, &remoteDesc)
+			if err != nil {
+				log.Fatalf("[%s] error: %s", o.Name, err)
+			}
 		}
 	}
 
@@ -122,7 +124,7 @@ func (o *Observer) offer(factory *webrtc.Factory) {
 			var (
 				obj struct {
 					Type string
-					Sdp  string
+					Sdp  interface{}
 				}
 			)
 			err := json.Unmarshal(sig, &obj)
@@ -144,8 +146,9 @@ func (o *Observer) offer(factory *webrtc.Factory) {
 				}
 			}
 
-			if obj.Sdp != "" {
-				desc, err := webrtc.ParseSessionDescription("answer", obj.Sdp)
+			if obj.Sdp != nil {
+				var desc *webrtc.SessionDescription
+				err := json.Unmarshal(sig, &desc)
 				if err != nil {
 					log.Fatalf("[%s] error: %s", o.Name, err)
 				}
@@ -181,16 +184,18 @@ func (o *Observer) anwser(factory *webrtc.Factory) {
 	log.Printf("[%s] ==> receive sdp offer", o.Name)
 	{
 		var (
-			obj  map[string]string
+			obj  map[string]interface{}
 			data = <-o.sig_rcv
 		)
 		err := json.Unmarshal(data, &obj)
 		if err != nil {
 			log.Fatalf("[%s] error: %s", o.Name, err)
 		}
-		remoteDesc, err = webrtc.ParseSessionDescription("offer", obj["sdp"])
-		if err != nil {
-			log.Fatalf("[%s] error: %s", o.Name, err)
+		if obj["sdp"] != nil {
+			err = json.Unmarshal(data, &remoteDesc)
+			if err != nil {
+				log.Fatalf("[%s] error: %s", o.Name, err)
+			}
 		}
 	}
 
@@ -221,7 +226,7 @@ func (o *Observer) anwser(factory *webrtc.Factory) {
 
 	log.Printf("[%s] ==> send sdp answer", o.Name)
 	{
-		data, err := json.Marshal(map[string]string{"sdp": localDesc.String()})
+		data, err := json.Marshal(localDesc)
 		if err != nil {
 			log.Fatalf("[%s] error: %s", o.Name, err)
 		}
@@ -234,7 +239,7 @@ func (o *Observer) anwser(factory *webrtc.Factory) {
 			var (
 				obj struct {
 					Type string
-					Sdp  string
+					Sdp  interface{}
 				}
 			)
 			err := json.Unmarshal(sig, &obj)
@@ -256,8 +261,9 @@ func (o *Observer) anwser(factory *webrtc.Factory) {
 				}
 			}
 
-			if obj.Sdp != "" {
-				desc, err := webrtc.ParseSessionDescription("answer", obj.Sdp)
+			if obj.Sdp != nil {
+				var desc *webrtc.SessionDescription
+				err := json.Unmarshal(sig, &desc)
 				if err != nil {
 					log.Fatalf("[%s] error: %s", o.Name, err)
 				}
@@ -273,10 +279,7 @@ func (o *Observer) OnError() {
 	log.Printf("[%s] EVENT: %s", o.Name, "OnError")
 }
 func (o *Observer) OnSignalingChange(s webrtc.SignalingState) {
-	log.Printf("[%s] EVENT: %s %#v", o.Name, "OnSignalingChange", s)
-}
-func (o *Observer) OnStateChange(s webrtc.State) {
-	log.Printf("[%s] EVENT: %s %#v", o.Name, "OnStateChange", s)
+	log.Printf("[%s] EVENT: %s => %s", o.Name, "OnSignalingChange", s)
 }
 func (o *Observer) OnAddStream() {
 	log.Printf("[%s] EVENT: %s", o.Name, "OnAddStream")
@@ -291,11 +294,19 @@ func (o *Observer) OnDataChannel(dc *webrtc.DataChannel) {
 func (o *Observer) OnRenegotiationNeeded() {
 	log.Printf("[%s] EVENT: %s", o.Name, "OnRenegotiationNeeded")
 }
-func (o *Observer) OnIceConnectionChange() {
-	log.Printf("[%s] EVENT: %s", o.Name, "OnIceConnectionChange")
+func (o *Observer) OnIceConnectionChange(state webrtc.IceConnectionState) {
+	log.Printf("[%s] EVENT: %s => %s", o.Name, "OnIceConnectionChange", state)
 }
-func (o *Observer) OnIceGatheringChange() {
-	log.Printf("[%s] EVENT: %s", o.Name, "OnIceGatheringChange")
+func (o *Observer) OnIceGatheringChange(state webrtc.IceGatheringState) {
+	log.Printf("[%s] EVENT: %s => %s", o.Name, "OnIceGatheringChange", state)
+	if state == webrtc.IceGatheringComplete {
+		for _, candidate := range o.ice_candidate_queue {
+			log.Printf("[%s] send signal %q", o.Name, candidate)
+			o.sig_snd <- candidate
+		}
+
+		o.ice_candidate_queue = nil
+	}
 }
 func (o *Observer) OnIceCandidate(candidate *webrtc.IceCandidate) {
 	data, err := json.Marshal(candidate)
@@ -305,17 +316,6 @@ func (o *Observer) OnIceCandidate(candidate *webrtc.IceCandidate) {
 
 	log.Printf("[%s] EVENT: %s (%s)", o.Name, "OnIceCandidate", data)
 	o.ice_candidate_queue = append(o.ice_candidate_queue, data)
-}
-
-func (o *Observer) OnIceComplete() {
-	log.Printf("[%s] EVENT: %s (candidates: %d)", o.Name, "OnIceComplete", len(o.ice_candidate_queue))
-
-	for _, candidate := range o.ice_candidate_queue {
-		log.Printf("[%s] send signal %q", o.Name, candidate)
-		o.sig_snd <- candidate
-	}
-
-	o.ice_candidate_queue = nil
 }
 
 type Pinger struct {

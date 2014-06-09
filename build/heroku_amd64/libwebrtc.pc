@@ -4,10 +4,10 @@ Name: libwebrtc
 Description: libwebrtc
 Version: 1
 
-Requires: libcrypto, nss, expat
+Requires: libcrypto
 
 Cflags: -I${prefix}/include \
   -I${prefix}/include/webrtc/system_wrappers/interface \
   -DPOSIX
 
-Libs: ${prefix}/lib/libwebrtc-part0.a -ldl
+Libs: -lexpat -lnss3 ${prefix}/lib/libwebrtc-part0.a -ldl
